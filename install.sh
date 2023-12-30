@@ -1,28 +1,28 @@
 # Hello Bros Welcome
 printf '\033c'
-echo "Welcome to Bros"
-sed -i "s/^#ParallelDownloads = 5$/ParallelDownloads = 15/" /etc/pacman.conf
+echo "Welcome to archy install bros"
 pacman --noconfirm -Sy archlinux-keyring
 loadkeys us
 timedatectl set-ntp true
 lsblk
-echo "Enter the drive: "
+echo "Get ready to create partition"
+echo "Enter the drive (like /dev/sda): "
 read drive
 cfdisk $drive 
-echo "Enter the linux partition: "
+echo "Enter the linux partition (like /dev/sda6): "
 read partition
 mkfs.ext4 $partition 
 mount $partition /mnt
 read -p "Did you also create efi partition? [y/n]" ansefi
 if [[ $ansefi = y ]] ; then
-  echo "Enter EFI partition: "
+  echo "Enter EFI partition (like /dev/sda4): "
   read efipartition
   mkfs.vfat -F 32 $efipartition
   mount --mkdir $efiparition /mnt/boot
 fi
 read -p "Did you also create swap partition? [y/n]" ansswap
 if [[ $ansswap = y ]] ; then
-  echo "Enter swap partition: "
+  echo "Enter swap partition (like /dev/sda5): "
   read swappartition
   mkswap $swappartition
   swapon $swappartition
@@ -36,14 +36,11 @@ exit
 
 #part2
 printf '\033c'
-pacman -S --noconfirm sed
-sed -i "s/^#ParallelDownloads = 5$/ParallelDownloads = 15/" /etc/pacman.conf
 ln -sf /usr/share/zoneinfo/Asia/Kathmandu /etc/localtime
 hwclock --systohc
 echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
 locale-gen
 echo "LANG=en_US.UTF-8" > /etc/locale.conf
-echo "KEYMAP=us" > /etc/vconsole.conf
 echo "Hostname: "
 read hostname
 echo $hostname > /etc/hostname
@@ -56,8 +53,16 @@ read username
 passwd $username
 usermod -aG wheel,storage,power,audio $username
 echo "%wheel ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-pacman --noconfirm -S grub efibootmgr os-prober
-echo "Enter EFI partition: " 
+pacman --noconfirm -S grub efibootmgr os-prober ntfs-3g
+read -p "Did you dual boot win and linux? [y/n]" answin
+lsblk
+if [[ $ansswap = y ]] ; then
+  echo "Enter windows boot partition (like /dev/sda1): "
+  read windowpartiton
+  mkdir /mnt/windows/
+  mount $efipartition /mnt/windows/
+fi
+echo "Enter EFI partition (like /dev/sda4): " 
 read efipartition
 mkdir /boot/efi
 mount $efipartition /boot/efi 
@@ -69,9 +74,9 @@ pacman -S --noconfirm xorg-server xorg-xinit xorg-xkill xorg-xsetroot xorg-xback
      sxiv mpv zathura zathura-pdf-mupdf ffmpeg imagemagick  \
      fzf man-db xwallpaper python-pywal unclutter xclip maim \
      zip unzip unrar p7zip xdotool papirus-icon-theme brightnessctl  \
-     dosfstools ntfs-3g git sxhkd zsh pipewire pipewire-pulse \
+     dosfstools git sxhkd zsh pipewire pipewire-pulse \
      arc-gtk-theme rsync qutebrowser dash \
-     xcompmgr libnotify dunst slock jq aria2 cowsay \
+     xcompmgr picom ripgrep libnotify dunst slock jq aria2 cowsay \
      dhcpcd network-manager-applet wireless_tools \
      wpa_supplicant rsync pamixer mpd ncmpcpp \
      zsh-syntax-highlighting xdg-user-dirs libconfig \
@@ -91,7 +96,7 @@ exit
 #part3
 printf '\033c'
 cd $HOME
-git clone --separate-git-dir=$HOME/.dotfiles https://github.com/Gr1shma/dotfiles.git tmpdotfiles
+git clone --separate-git-dir=$HOME/.dotfiles https://github.com/Rustywriter/dotfiles.git tmpdotfiles
 rsync --recursive --verbose --exclude '.git' tmpdotfiles/ $HOME/
 rm -r tmpdotfiles
 # dwm: Window Manager
@@ -110,12 +115,15 @@ sudo make -C ~/.local/src/dmenu install
 git clone --depth=1 https://github.com/ritze/pinentry-dmenu.git ~/.local/src/pinentry-dmenu
 sudo make -C ~/.local/src/pinentry-dmenu clean install
 
+# neovim setup
+git clone --depth=1 https://github.com/Rustywriter/init.lua ~/.config/nvim
+
 # yay: AUR helper
 git clone https://aur.archlinux.org/yay.git
 cd yay
 makepkg -fsri
 cd
-yay -S libxft-bgra-git yt-dlp-drop-in helix
+yay -S libxft-bgra-git yt-dlp-drop-in helix neovim github-cli phinger-cursors fzf tmux qbittorrent
 mkdir dl doc imp music pix vid code
 
 ln -s ~/.config/x11/xinitrc .xinitrc
@@ -126,4 +134,3 @@ ln -s ~/.config/zsh/zsh .zshrc
 alias dots='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 dots config --local status.showUntrackedFiles no
 exit
-
