@@ -8,17 +8,16 @@ lsblk
 echo "Get ready to create partition"
 echo "Enter the drive (like /dev/sda): "
 read drive
-cfdisk $drive 
+cfdisk $drive
 echo "Enter the linux partition (like /dev/sda6): "
 read partition
-mkfs.ext4 $partition 
+mkfs.ext4 $partition
 mount $partition /mnt
 read -p "Did you also create efi partition? [y/n]" ansefi
 if [[ $ansefi = y ]] ; then
   echo "Enter EFI partition (like /dev/sda4): "
   read efipartition
   mkfs.vfat -F 32 $efipartition
-  mount --mkdir $efiparition /mnt/boot
 fi
 read -p "Did you also create swap partition? [y/n]" ansswap
 if [[ $ansswap = y ]] ; then
@@ -32,7 +31,7 @@ genfstab -U /mnt >> /mnt/etc/fstab
 sed '1,/^#part2$/d' `basename $0` > /mnt/install2.sh
 chmod +x /mnt/install2.sh
 arch-chroot /mnt ./install2.sh
-exit 
+exit
 
 #part2
 printf '\033c'
@@ -50,6 +49,7 @@ echo "127.0.1.1       $hostname.localdomain $hostname" >> /etc/hosts
 passwd
 echo "Enter Username: "
 read username
+useradd -m $username
 passwd $username
 usermod -aG wheel,storage,power,audio $username
 echo "%wheel ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
@@ -62,18 +62,18 @@ if [[ $ansswap = y ]] ; then
   mkdir /mnt/windows/
   mount $efipartition /mnt/windows/
 fi
-echo "Enter EFI partition (like /dev/sda4): " 
+echo "Enter EFI partition (like /dev/sda4): "
 read efipartition
 mkdir /boot/efi
-mount $efipartition /boot/efi 
-grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
+mount $efipartition /boot/efi
+grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
 grub-mkconfig -o /boot/grub/grub.cfg
 
 pacman -S --noconfirm xorg-server xorg-xinit xorg-xkill xorg-xsetroot xorg-xbacklight xorg-xprop \
      noto-fonts noto-fonts-emoji noto-fonts-cjk ttf-jetbrains-mono ttf-joypixels ttf-font-awesome \
      sxiv mpv zathura zathura-pdf-mupdf ffmpeg imagemagick  \
      fzf man-db xwallpaper python-pywal unclutter xclip maim \
-     zip unzip unrar p7zip xdotool papirus-icon-theme brightnessctl  \
+     zip unzip unrar p7zip xdotool papirus-icon-theme brightnessctl udisks2 \
      dosfstools git sxhkd zsh pipewire pipewire-pulse \
      arc-gtk-theme rsync qutebrowser dash \
      xcompmgr picom ripgrep libnotify dunst slock jq aria2 cowsay \
@@ -82,7 +82,7 @@ pacman -S --noconfirm xorg-server xorg-xinit xorg-xkill xorg-xsetroot xorg-xback
      zsh-syntax-highlighting xdg-user-dirs libconfig \
      bluez bluez-utils
 
-systemctl enable NetworkManager bluetooth 
+systemctl enable NetworkManager bluetooth
 rm /bin/sh
 ln -s dash /bin/sh
 echo "Pre-Installation Finish Reboot now"
@@ -91,24 +91,24 @@ sed '1,/^#part3$/d' install2.sh > $ai3_path
 chown $username:$username $ai3_path
 chmod +x $ai3_path
 su -c $ai3_path -s /bin/sh $username
-exit 
+exit
 
 #part3
 printf '\033c'
 cd $HOME
-git clone --separate-git-dir=$HOME/.dotfiles https://github.com/Rustywriter/dotfiles.git tmpdotfiles
+git clone --separate-git-dir=$HOME/.dotfiles https://github.com/Gr1shma/dotfiles.git tmpdotfiles
 rsync --recursive --verbose --exclude '.git' tmpdotfiles/ $HOME/
 rm -r tmpdotfiles
 # dwm: Window Manager
-git clone --depth=1 https://github.com/Rustywriter/dwm.git ~/.local/src/dwm
+git clone --depth=1 https://github.com/Gr1shma/dwm.git ~/.local/src/dwm
 sudo make -C ~/.local/src/dwm install
 
 # st: Terminal
-git clone --depth=1 https://github.com/Rustywriter/st.git ~/.local/src/st
+git clone --depth=1 https://github.com/Gr1shma/st.git ~/.local/src/st
 sudo make -C ~/.local/src/st install
 
 # dmenu: Program Menu
-git clone --depth=1 https://github.com/Rustywriter/dmenu.git ~/.local/src/dmenu
+git clone --depth=1 https://github.com/Gr1shma/dmenu.git ~/.local/src/dmenu
 sudo make -C ~/.local/src/dmenu install
 
 # dmenu: Dmenu based Password Prompt
@@ -116,14 +116,14 @@ git clone --depth=1 https://github.com/ritze/pinentry-dmenu.git ~/.local/src/pin
 sudo make -C ~/.local/src/pinentry-dmenu clean install
 
 # neovim setup
-git clone --depth=1 https://github.com/Rustywriter/init.lua ~/.config/nvim
+git clone --depth=1 https://github.com/Gr1shma/init.lua ~/.config/nvim
 
 # yay: AUR helper
 git clone https://aur.archlinux.org/yay.git
 cd yay
 makepkg -fsri
 cd
-yay -S libxft-bgra-git yt-dlp-drop-in helix neovim github-cli phinger-cursors fzf tmux qbittorrent
+yay -S libxft-bgra-git yt-dlp-drop-in helix neovim github-cli phinger-cursors fzf tmux qbittorrent firefox
 mkdir dl doc imp music pix vid code
 
 ln -s ~/.config/x11/xinitrc .xinitrc
