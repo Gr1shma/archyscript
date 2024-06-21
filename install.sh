@@ -56,11 +56,12 @@ echo "%wheel ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 pacman --noconfirm -S grub efibootmgr os-prober ntfs-3g
 read -p "Did you dual boot win and linux? [y/n]" answin
 lsblk
-if [[ $ansswap = y ]] ; then
+if [[ $answin = y ]] ; then
   echo "Enter windows boot partition (like /dev/sda1): "
   read windowpartiton
   mkdir /mnt/windows/
   mount $efipartition /mnt/windows/
+  echo "GRUB_DISABLE_OS_PROBER=false" >> /etc/default/grub
 fi
 echo "Enter EFI partition (like /dev/sda4): "
 read efipartition
@@ -68,6 +69,7 @@ mkdir /boot/efi
 mount $efipartition /boot/efi
 grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
 grub-mkconfig -o /boot/grub/grub.cfg
+
 
 pacman -S --noconfirm xorg-server xorg-xinit xorg-xkill xorg-xsetroot xorg-xbacklight xorg-xprop \
      noto-fonts noto-fonts-emoji noto-fonts-cjk ttf-jetbrains-mono ttf-joypixels ttf-font-awesome \
@@ -123,8 +125,8 @@ git clone https://aur.archlinux.org/yay.git
 cd yay
 makepkg -fsri
 cd
-yay -S libxft-bgra-git yt-dlp-drop-in helix neovim github-cli phinger-cursors fzf tmux qbittorrent firefox
-mkdir dl doc imp music pix vid code
+yay -S libxft-bgra-git yt-dlp-drop-in helix neovim github-cli phinger-cursors fzf tmux qbittorrent firefox syncthing nvidia nvidia-utils nvidia-settings auto-cpufreq node-js yarn npm
+mkdir dl dox music pix vid code projects personal
 
 ln -s ~/.config/x11/xinitrc .xinitrc
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
