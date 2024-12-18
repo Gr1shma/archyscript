@@ -6,22 +6,22 @@ loadkeys us
 timedatectl set-ntp true
 lsblk
 echo "Get ready to create partition"
-echo "Enter the drive (like /dev/sda): "
+echo "Enter the drive (like /dev/nvme0n1): "
 read drive
 cfdisk $drive
-echo "Enter the linux partition (like /dev/sda6): "
+echo "Enter the linux partition (like /dev/nvme0n1p6): "
 read partition
 mkfs.ext4 $partition
 mount $partition /mnt
 read -p "Did you also create efi partition? [y/n]" ansefi
 if [[ $ansefi = y ]] ; then
-  echo "Enter EFI partition (like /dev/sda4): "
+  echo "Enter EFI partition (like /dev/nvme0n1p5): "
   read efipartition
   mkfs.vfat -F 32 $efipartition
 fi
 read -p "Did you also create swap partition? [y/n]" ansswap
 if [[ $ansswap = y ]] ; then
-  echo "Enter swap partition (like /dev/sda5): "
+  echo "Enter swap partition (like /dev/nvme0n1p8): "
   read swappartition
   mkswap $swappartition
   swapon $swappartition
@@ -54,21 +54,22 @@ passwd $username
 usermod -aG wheel,storage,power,audio $username
 echo "%wheel ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 pacman --noconfirm -S grub efibootmgr os-prober ntfs-3g
-read -p "Did you dual boot win and linux? [y/n]" answin
 lsblk
+echo "Enter EFI partition (like /dev/nvme0n1p5): "
+read efipartition
+mkdir /boot/efi
+mount $efipartition /boot/efi
+read -p "Did you dual boot win and linux? [y/n]" answin
 if [[ $answin = y ]] ; then
-  echo "Enter windows boot partition (like /dev/sda1): "
+  echo "Enter windows boot partition (like /dev/nvme0n1p1): "
   read windowpartiton
   mkdir /mnt/windows/
   mount $efipartition /mnt/windows/
   echo "GRUB_DISABLE_OS_PROBER=false" >> /etc/default/grub
 fi
-echo "Enter EFI partition (like /dev/sda4): "
-read efipartition
-mkdir /boot/efi
-mount $efipartition /boot/efi
 grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
 grub-mkconfig -o /boot/grub/grub.cfg
+
 
 
 pacman -S --noconfirm xorg-server xorg-xinit xorg-xkill xorg-xsetroot xorg-xbacklight xorg-xprop \
@@ -78,7 +79,7 @@ pacman -S --noconfirm xorg-server xorg-xinit xorg-xkill xorg-xsetroot xorg-xback
      zip unzip unrar p7zip xdotool papirus-icon-theme brightnessctl udisks2 \
      dosfstools git sxhkd zsh pipewire pipewire-pulse \
      arc-gtk-theme rsync qutebrowser dash \
-     xcompmgr picom ripgrep libnotify dunst slock jq aria2 cowsay \
+     xcompmgr ripgrep libnotify dunst slock jq aria2 cowsay \
      dhcpcd network-manager-applet wireless_tools \
      wpa_supplicant rsync pamixer mpd ncmpcpp \
      zsh-syntax-highlighting xdg-user-dirs libconfig \
@@ -87,7 +88,7 @@ pacman -S --noconfirm xorg-server xorg-xinit xorg-xkill xorg-xsetroot xorg-xback
 systemctl enable NetworkManager bluetooth
 rm /bin/sh
 ln -s dash /bin/sh
-echo "Pre-Installation Finish Reboot now"
+echo "Pre-Installation Finish"
 ai3_path=/home/$username/install3.sh
 sed '1,/^#part3$/d' install2.sh > $ai3_path
 chown $username:$username $ai3_path
@@ -121,18 +122,50 @@ sudo make -C ~/.local/src/pinentry-dmenu clean install
 git clone --depth=1 https://github.com/Gr1shma/init.lua ~/.config/nvim
 
 # yay: AUR helper
-git clone https://aur.archlinux.org/yay.git
+git clone https://aur.archlinux.org/yay.git ~/yay
 cd yay
-makepkg -fsri
+makepkg -fsri --noconfirm
 cd
-yay -S libxft-bgra-git yt-dlp-drop-in helix neovim github-cli phinger-cursors fzf tmux qbittorrent firefox syncthing nvidia nvidia-utils nvidia-settings auto-cpufreq node-js yarn npm
+rm -rf ~/yay
+yay -S --noconfirm libxft-bgra-git yt-dlp-drop-in helix neovim github-cli phinger-cursors fzf tmux qbittorrent firefox syncthing nvidia nvidia-utils nvidia-settings auto-cpufreq node-js yarn npm luarocks lua51 rofi thunar tumbler yazi postman-bin nsxiv btop pfetch jq lazygit tree ueberzugpp elixir zig
+
+# rust install
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --quiet -y
+
 mkdir dl dox music pix vid code projects personal
 
 ln -s ~/.config/x11/xinitrc .xinitrc
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-mv ~/.oh-my-zsh ~/.config/zsh/oh-my-zsh
 rm ~/.zshrc ~/.zsh_history
 ln -s ~/.config/zsh/zsh .zshrc
+
 alias dots='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 dots config --local status.showUntrackedFiles no
+
+echo "run install4.sh after reboot"
+ai4_path=/home/$username/install4.sh
+sed '1,/^#part4$/d' install3.sh > $ai4_path
+exit
+
+#part4
+printf '\033c'
+read -p "Is this predator? [y/n]" anspredator
+if [[ $anspredator = y ]]; then
+    echo "options snd-hda-intel dmic_detect=0" | tee -a /etc/modprobe.d/alsa-base.conf
+    echo "blacklist snd_soc_skl" | tee -a /etc/modprobe.d/blacklist.conf
+fi
+read -p "Is this pc have keyboard? [y/n]" anskeyboard
+if [[ $anskeyboard = y ]]; then
+    echo "Section \"InputClass\"" >> /etc/X11/xorg.conf.d/30-touchpad.conf 
+    echo "    Identifier \"touchpad\"" >> /etc/X11/xorg.conf.d/30-touchpad.conf 
+    echo "    Driver \"libinput\"" >> /etc/X11/xorg.conf.d/30-touchpad.conf 
+    echo "    MatchIsTouchpad \"on\"" >> /etc/X11/xorg.conf.d/30-touchpad.conf 
+    echo "    Option \"Tapping\" \"on\"" >> /etc/X11/xorg.conf.d/30-touchpad.conf 
+    echo "    Option \"TappingButtonMap\" \"lmr\"" >> /etc/X11/xorg.conf.d/30-touchpad.conf
+    echo "EndSection" >> /etc/X11/xorg.conf.d/30-touchpad.conf 
+fi
+read -p "Do you want to reboot now? [y/n]" ansreboot
+if [[ $ansreboot = y ]]; then
+    reboot
+fi
+rm -rf install3.sh
 exit
