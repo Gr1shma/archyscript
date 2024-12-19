@@ -21,7 +21,7 @@ Alright, listen up. Have you booted your Arch yet? If the answer's yes, good. No
 Is your WiFi connected? If yes, then curl this install script and make it executable.
 
 ```bash
-curl https://raw.githubusercontent.com/Rustywriter/archyscript/master/install.sh >> install.sh
+curl https://raw.githubusercontent.com/Gr1shma/archyscript/master/install.sh >> install.sh
 chmod +x install.sh
 ./install.sh
 ```

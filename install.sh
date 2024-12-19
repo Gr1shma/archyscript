@@ -88,6 +88,10 @@ pacman -S --noconfirm xorg-server xorg-xinit xorg-xkill xorg-xsetroot xorg-xback
 systemctl enable NetworkManager bluetooth
 rm /bin/sh
 ln -s dash /bin/sh
+ai4_path=/home/$username/install4.sh
+sed '1,/^#part4$/d' install3.sh > $ai4_path
+chown $username:$username $ai4_path
+chmod +x $ai4_path
 echo "Pre-Installation Finish"
 ai3_path=/home/$username/install3.sh
 sed '1,/^#part3$/d' install2.sh > $ai3_path
@@ -127,7 +131,7 @@ cd yay
 makepkg -fsri --noconfirm
 cd
 rm -rf ~/yay
-yay -S --noconfirm libxft-bgra-git yt-dlp-drop-in helix neovim github-cli phinger-cursors fzf tmux qbittorrent firefox syncthing nvidia nvidia-utils nvidia-settings auto-cpufreq node-js yarn npm luarocks lua51 rofi thunar tumbler yazi postman-bin nsxiv btop pfetch jq lazygit tree ueberzugpp elixir zig
+yay -S --noconfirm libxft-bgra-git yt-dlp-drop-in helix neovim github-cli phinger-cursors fzf tmux qbittorrent firefox syncthing nvidia nvidia-utils nvidia-settings auto-cpufreq node-js yarn npm luarocks lua51 rofi thunar tumbler yazi postman-bin nsxiv btop pfetch jq lazygit tree ueberzugpp elixir zig hugo zola
 
 # rust install
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --quiet -y
@@ -142,8 +146,6 @@ alias dots='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 dots config --local status.showUntrackedFiles no
 
 echo "run install4.sh after reboot"
-ai4_path=/home/$username/install4.sh
-sed '1,/^#part4$/d' install3.sh > $ai4_path
 exit
 
 #part4
